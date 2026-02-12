@@ -132,14 +132,12 @@ uint64_t Board::getBitboardFromType(int pieceType) const{
     return pieces[pieceType];
 }
 
-//
 uint64_t Board::getWhiteBitBoard() const{
     return pieces[W_PAWN] | pieces[W_BISHOP] |
         pieces[W_KNIGHT] | pieces[W_TOWER] |
         pieces[W_QUEEN] | pieces[W_KING];
 }
 
-//
 uint64_t Board::getBlackBitBoard() const{
     return pieces[B_PAWN] | pieces[B_BISHOP] |
         pieces[B_KNIGHT] | pieces[B_TOWER] |
@@ -195,7 +193,7 @@ bool Board::makeMove(Move move) {
             }
         }
 
-        // Comprobar captura en passant
+        // En passant
         int direction = whiteToMove ? 8 : -8;
         if ((pieceIndex == W_PAWN || pieceIndex == B_PAWN) && 
             (move.to == (move.from + direction + 1) || move.to == (move.from + direction - 1))) {
@@ -216,7 +214,7 @@ bool Board::makeMove(Move move) {
             }
         }
 
-        // Comprobar el enroque
+        // Castling
         if (pieceIndex == W_KING) {
             if (move.from == 4 && move.to == 6 && whiteCastleRight) {
                 uint64_t from_tower_mask = 1ULL << 7;
@@ -260,15 +258,15 @@ bool Board::makeMove(Move move) {
             blackCastleRight = false;
         }
 
-        // Comprobar si hay una promoción
+        // Check for a promotion
         if ((pieceIndex == W_PAWN && move.to >= 56) || (pieceIndex == B_PAWN && move.to < 8)) {
-            if (promotionIndex != -1) { // Si hay promoción
+			if (promotionIndex != -1) { // There's a promotion
                 pieces[promotionIndex] |= to_mask;
                 pieces[pieceIndex] &= ~to_mask;
             }
         }
 
-        // Actualizar la cuenta de movimientos y a quíen le toca mover y último mov
+		// Update move count, turn and last move
         moves++;
         whiteToMove = !whiteToMove;
         lastMove = move;

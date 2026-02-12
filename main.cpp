@@ -2,7 +2,6 @@
 #include "./Board.h"
 
 int main(int argc, char** argv) {
-    std::cout << "Arrancando proyecto 'noobie'...\n";
 
     Board board(true);
     board.printBitboard(board.getOccupiedBitBoard());
@@ -12,6 +11,5 @@ int main(int argc, char** argv) {
     // MotorAjedrez motor;
     // motor.Iniciar();
 
-    std::cout << "Inicialización por defecto completada (sin motor).\n";
     return 0;
 }
