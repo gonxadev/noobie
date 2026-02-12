@@ -99,7 +99,30 @@ public:
 
     Move getLastMove() const;
 
-    int getBoardIndexFromMoveGenerator(int indexFromMoveGenerator); // Devuelve el índice con el que indexar la posición de una pieza a partir del índice de MoveGenerator
+    int getBoardIndexFromMoveGenerator(int indexFromMoveGenerator) const; // Devuelve el índice con el que indexar la posición de una pieza a partir del índice de MoveGenerator
+
+    static bool isSameDiagonal(int from, int to);
+    static bool isKnigthMove(int from, int to);
+    static bool isSameRank(int from, int to);
+    static bool isSameColumn(int from, int to);
+
+    static bool isHorizontalPathClear(Move m, uint64_t occupied);
+    static bool isVerticalPathClear(Move m, uint64_t occupied);
+    static bool isDiagonalPathClear(Move m, uint64_t occupied);
+    static bool isSquareUnderAttack(const Board& board, int square, int attackerColor);
+
+
+    static uint64_t generatePawnAttacks(uint64_t pawns, int color);
+    static uint64_t generateBishopAttacks(uint64_t bishops, uint64_t opposition, uint64_t occupied);
+    static uint64_t generateKnightAttacks(uint64_t knight, uint64_t opposition, uint64_t occupied);
+    static uint64_t generateTowerAttacks(uint64_t towers, uint64_t opposition, uint64_t occupied);
+    static uint64_t generateQueenAttacks(uint64_t queens, uint64_t opposition, uint64_t occupied);
+    static uint64_t generateKingAttacks(uint64_t king, uint64_t opposition, uint64_t occupied);
+
+    static bool isKingInCheck(const Board& board, int kingColor);
+    static bool isLegal(const Board& board, Move move, int color);
+
+    void filterMoves(const Board& board, std::vector<Move>& moves, int color);
 
     /*
     * @brief
