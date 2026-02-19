@@ -1,6 +1,4 @@
 #pragma once
-#include <stdint.h>
-#include <vector>
 #include "Board.h"
 
 class MoveGenerator {
