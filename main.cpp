@@ -5,7 +5,7 @@
 int main(int argc, char** argv) {
 
     Board board(true);
-    int depth = 5;
+    int depth = 3;
     uint64_t nodes = benchmark::perft(board, depth);
 	std::cout << "Total nodes at depth " << depth << ": " << nodes << std::endl;
     return 0;

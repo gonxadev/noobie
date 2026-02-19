@@ -3,6 +3,9 @@
 #include <iostream>
 #include <stack>
 #include <vector>
+#include <memory>
+
+class MoveGenerator;
 
 struct Move {
     int from;
@@ -46,6 +49,8 @@ private:
     Move lastMove ;
 
     std::stack<BoardState> history;
+
+	std::unique_ptr<MoveGenerator> moveGen;
 
 public:
     // pieces array indexes
@@ -123,7 +128,7 @@ public:
     static bool isKingInCheck(const Board& board, int kingColor);
     static bool isLegal(const Board& board, Move move, int color);
 
-    void filterMoves(const Board& board, std::vector<Move>& moves, int color);
+    void generateLegalMoves(const Board& board, std::vector<Move>& moves, int color);
 
     /*
     * @brief

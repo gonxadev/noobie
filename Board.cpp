@@ -1,4 +1,5 @@
 ﻿#include "Board.h"
+#include "MoveGenerator.h"
 
 Board::Board(bool init) {
     if (init) {
@@ -34,6 +35,7 @@ Board::Board(bool init) {
         pieces[B_KING] = 0ULL;
         pieces[B_QUEEN] = 0ULL;
     }
+    moveGen = std::make_unique<MoveGenerator>();
 }
 
 Board::Board(uint64_t w_pawn, uint64_t w_bishop, uint64_t w_knight, uint64_t w_tower, uint64_t w_king, uint64_t w_queen, 
@@ -52,6 +54,8 @@ Board::Board(uint64_t w_pawn, uint64_t w_bishop, uint64_t w_knight, uint64_t w_t
     pieces[B_TOWER] = b_tower;
     pieces[B_KING] = b_king;
     pieces[B_QUEEN] = b_queen;
+
+    moveGen = std::make_unique<MoveGenerator>();
 }
 
 void Board::printBitboard(uint64_t bitboard) {
@@ -1117,7 +1121,7 @@ CHECK_KING:
     return !isKingInCheck(auxBoard, color);
 }
 
-void Board::filterMoves(const Board& board, std::vector<Move>& moves, int color) {
+void Board::generateLegalMoves(const Board& board, std::vector<Move>& moves, int color) {
     for (int i = 0; i < moves.size(); i++) {
         Move move = moves.at(i);
         if (!isLegal(board, move, color)) {
