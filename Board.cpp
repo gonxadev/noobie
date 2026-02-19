@@ -1,4 +1,4 @@
-#include "Board.h"
+Ôªø#include "Board.h"
 
 Board::Board(bool init) {
     if (init) {
@@ -181,7 +181,7 @@ bool Board::makeMove(Move move) {
         uint64_t occupied = getOccupiedBitBoard();
         uint64_t oppPosition = whiteToMove ? getBlackBitBoard() : getWhiteBitBoard();
 
-        // Mover la pieza en su posiciÛn correspondiente
+        // Mover la pieza en su posici√≥n correspondiente
         pieces[pieceIndex] |= to_mask;
         pieces[pieceIndex] &= ~from_mask;
 
@@ -201,7 +201,7 @@ bool Board::makeMove(Move move) {
 
                 int passantSquare = lastMove.to;                        // Casilla donde se encuentra la pieza contraria
                 int passantLandingSqu = lastMove.to + direction;        // Casilla a donde se mueve la pieza atacante
-                uint64_t passantLndSquMask = 1ULL << passantLandingSqu; // M·scara de la casilla de llegada
+                uint64_t passantLndSquMask = 1ULL << passantLandingSqu; // M√°scara de la casilla de llegada
                 uint64_t passantSquMask = 1ULL << passantSquare;
 
                 if ((abs(passantSquare - move.from) == 1) && // Casilla es adyacente
@@ -275,6 +275,125 @@ bool Board::makeMove(Move move) {
     return false;
 }
 
+bool Board::makeMoveV2(Move move) {
+    if (Board::isLegal(this, move, this->isWhiteToMove() ? Board::WHITE : Board::BLACK)) {
+        BoardState currentState;
+        for (int i = 0; i < 12; i++) currentState.pieces[i] = pieces[i];
+        currentState.whiteToMove = whiteToMove;
+        currentState.whiteCastleLeft = whiteCastleLeft;
+        currentState.whiteCastleRight = whiteCastleRight;
+        currentState.blackCastleLeft = blackCastleLeft;
+        currentState.blackCastleRight = blackCastleRight;
+        currentState.lastMove = lastMove;
+        currentState.stalemate = stalemate;
+        currentState.moves = moves;
+
+        history.push(currentState);
+
+        int pieceIndex = getBoardIndexFromMoveGenerator(move.piece);
+        int lastMovePieceIndex = getBoardIndexFromMoveGenerator(lastMove.piece);
+        int promotionIndex = getBoardIndexFromMoveGenerator(move.promotion);
+
+        uint64_t from_mask = 1ULL << move.from;
+        uint64_t delete_mask = ~from_mask;
+        uint64_t to_mask = 1ULL << move.to;
+        uint64_t occupied = getOccupiedBitBoard();
+        uint64_t oppPosition = whiteToMove ? getBlackBitBoard() : getWhiteBitBoard();
+
+        // Mover la pieza en su posici√≥n correspondiente
+        pieces[pieceIndex] |= to_mask;
+        pieces[pieceIndex] &= ~from_mask;
+
+        // Borrar la pieza que haya sido capturada
+        int size = sizeof(pieces) / sizeof(pieces[0]);
+        for (int i = 0; i < size; i++) {
+            if (i != pieceIndex) {
+                pieces[i] &= ~to_mask;
+            }
+        }
+
+        // En passant
+        int direction = whiteToMove ? 8 : -8;
+        if ((pieceIndex == W_PAWN || pieceIndex == B_PAWN) &&
+            (move.to == (move.from + direction + 1) || move.to == (move.from + direction - 1))) {
+            if ((lastMovePieceIndex == W_PAWN || lastMovePieceIndex == B_PAWN) && abs(lastMove.from - lastMove.to) == 16) {
+
+                int passantSquare = lastMove.to;                        // Casilla donde se encuentra la pieza contraria
+                int passantLandingSqu = lastMove.to + direction;        // Casilla a donde se mueve la pieza atacante
+                uint64_t passantLndSquMask = 1ULL << passantLandingSqu; // M√°scara de la casilla de llegada
+                uint64_t passantSquMask = 1ULL << passantSquare;
+
+                if ((abs(passantSquare - move.from) == 1) && // Casilla es adyacente
+                    (occupied & passantSquMask) &&           // Casilla adyacente ocupada por enemigo
+                    !(occupied & passantLndSquMask)) {       // Casilla de llegada libre   
+                    for (int i = 0; i < size; i++) {
+                        pieces[i] &= ~passantSquMask;
+                    }
+                }
+            }
+        }
+
+        // Castling
+        if (pieceIndex == W_KING) {
+            if (move.from == 4 && move.to == 6 && whiteCastleRight) {
+                uint64_t from_tower_mask = 1ULL << 7;
+                uint64_t to_tower_mask = 1ULL << 5;
+                pieces[W_TOWER] |= to_tower_mask;
+                pieces[W_TOWER] &= ~from_tower_mask;
+            }
+            else if (move.from == 4 && move.to == 2 && whiteCastleLeft) {
+                uint64_t from_tower_mask = 1ULL << 0;
+                uint64_t to_tower_mask = 1ULL << 3;
+                pieces[W_TOWER] |= to_tower_mask;
+                pieces[W_TOWER] &= ~from_tower_mask;
+            }
+            whiteCastleLeft = whiteCastleRight = false;
+        }
+        else if (pieceIndex == B_KING) {
+            if (move.from == 60 && move.to == 62 && blackCastleRight) {
+                uint64_t from_tower_mask = 1ULL << 63;
+                uint64_t to_tower_mask = 1ULL << 61;
+                pieces[B_TOWER] |= to_tower_mask;
+                pieces[B_TOWER] &= ~from_tower_mask;
+            }
+            else if (move.from == 60 && move.to == 57 && blackCastleLeft) {
+                uint64_t from_tower_mask = 1ULL << 56;
+                uint64_t to_tower_mask = 1ULL << 59;
+                pieces[B_TOWER] |= to_tower_mask;
+                pieces[B_TOWER] &= ~from_tower_mask;
+            }
+            blackCastleLeft = blackCastleRight = false;
+        }
+        else if (pieceIndex == W_TOWER && move.from == 0) {
+            whiteCastleLeft = false;
+        }
+        else if (pieceIndex == W_TOWER && move.from == 7) {
+            whiteCastleRight = false;
+        }
+        else if (pieceIndex == B_TOWER && move.from == 56) {
+            blackCastleLeft = false;
+        }
+        else if (pieceIndex == B_TOWER && move.from == 63) {
+            blackCastleRight = false;
+        }
+
+        // Check for a promotion
+        if ((pieceIndex == W_PAWN && move.to >= 56) || (pieceIndex == B_PAWN && move.to < 8)) {
+            if (promotionIndex != -1) { // There's a promotion
+                pieces[promotionIndex] |= to_mask;
+                pieces[pieceIndex] &= ~to_mask;
+            }
+        }
+
+        // Update move count, turn and last move
+        moves++;
+        whiteToMove = !whiteToMove;
+        lastMove = move;
+        return true;
+    }
+    return false;
+}
+
 void Board::unmakeMove() {
     if (history.empty()) return;
 
@@ -320,10 +439,10 @@ int Board::getBoardIndexFromMoveGenerator(int indexFromMoveGenerator) const {
 
 int Board::getBitFromBoard(int pieceIndex, int from) {
     if (pieceIndex < 0 || pieceIndex >= 12) {
-        throw std::out_of_range("Õndice de pieza fuera de rango");
+        throw std::out_of_range("√çndice de pieza fuera de rango");
     }
     if (from < 0 || from >= 64) {
-        throw std::out_of_range("PosiciÛn fuera de rango");
+        throw std::out_of_range("Posici√≥n fuera de rango");
     }
 
     uint64_t position = pieces[pieceIndex];
@@ -332,10 +451,10 @@ int Board::getBitFromBoard(int pieceIndex, int from) {
 
 void Board::setBitOfBoard(int pieceIndex, int to) {
     if (pieceIndex < 0 || pieceIndex >= 12) {
-        throw std::out_of_range("Õndice de pieza fuera de rango");
+        throw std::out_of_range("√çndice de pieza fuera de rango");
     }
     if (to < 0 || to >= 64) {
-        throw std::out_of_range("PosiciÛn fuera de rango");
+        throw std::out_of_range("Posici√≥n fuera de rango");
     }
 
     pieces[pieceIndex] |= (1ULL << to);
@@ -343,10 +462,10 @@ void Board::setBitOfBoard(int pieceIndex, int to) {
 
 void Board::clearBitOfBoard(int pieceIndex, int to) {
     if (pieceIndex < 0 || pieceIndex >= 12) {
-        throw std::out_of_range("Õndice de pieza fuera de rango");
+        throw std::out_of_range("√çndice de pieza fuera de rango");
     }
     if (to < 0 || to >= 64) {
-        throw std::out_of_range("PosiciÛn fuera de rango");
+        throw std::out_of_range("Posici√≥n fuera de rango");
     }
 
     pieces[pieceIndex] &= ~(1ULL << to); 
@@ -404,7 +523,7 @@ bool Board::isHorizontalPathClear(Move m, uint64_t occupied) {
     int toRank = m.to / 8;
 
     if (fromRank != toRank) {
-        throw std::invalid_argument("Movimiento no v·lido: debe ser horizontal.");
+        throw std::invalid_argument("Movimiento no v√°lido: debe ser horizontal.");
     }
 
     if (m.from == m.to) {
@@ -440,7 +559,7 @@ bool Board::isVerticalPathClear(Move m, uint64_t occupied) {
     int toCol = m.to % 8;
 
     if (m.from == m.to || fromCol != toCol) {
-        throw std::invalid_argument("Movimiento no v·lido: debe ser vertical.");
+        throw std::invalid_argument("Movimiento no v√°lido: debe ser vertical.");
     }
 
     if (m.from == m.to) {
@@ -476,7 +595,7 @@ bool Board::isDiagonalPathClear(Move m, uint64_t occupied) {
     int toCol = m.to % 8;
 
     if (m.from == m.to || abs(fromRank - toRank) != abs(fromCol - toCol)) {
-        throw std::invalid_argument("Movimiento no v·lido: debe ser diagonal.");
+        throw std::invalid_argument("Movimiento no v√°lido: debe ser diagonal.");
     }
 
     if (m.from == m.to) {
@@ -526,11 +645,11 @@ bool Board::isSquareUnderAttack(const Board& board, int square, int attackerColo
     attacks |= generatePawnAttacks(enemyPawns, oppColor);
     attacks |= generateBishopAttacks(enemyBishop, position, occupied);
     attacks |= generateKnightAttacks(enemyKnight, position, occupied);
-    attacks |= generateKnightAttacks(enemyTower, position, occupied);
-    attacks |= generateKnightAttacks(enemyQueen, position, occupied);
-    attacks |= generateKnightAttacks(enemyKing, position, occupied);
+    attacks |= generateTowerAttacks(enemyTower, position, occupied);
+    attacks |= generateQueenAttacks(enemyQueen, position, occupied);
+    attacks |= generateKingAttacks(enemyKing, position, occupied);
 
-    if (square & attacks) {
+    if (squareMask & attacks) {
         return true;
     }
 
@@ -552,81 +671,48 @@ uint64_t Board::generatePawnAttacks(uint64_t pawns, int color) {
 
 uint64_t Board::generateBishopAttacks(uint64_t bishops, uint64_t opposition, uint64_t occupied) {
     uint64_t attacks = 0ULL;
+
     for (int square = 0; square < 64; square++) {
-        if ((bishops & (1ULL << square))) {
-            // Diagonal superior derecha
-            for (int to = square + 9; to < 64; to += 9) {
-                uint64_t attack = 1ULL << to;
-                // LÌmites del tablero
-                if (((1ULL << square) & Board::right) || ((1ULL << square) & Board::top)) {
-                    break;
-                }
-                if (!(attack & occupied)) {
-                    attacks |= attack;
-                }
-                else {
-                    if (attack & opposition) {
-                        attacks |= attack;
-                    }
-                    break;
-                }
-            }
 
-            //Diagonal inferior izquierda
-            for (int to = square - 9; to >= 0; to -= 9) {
-                uint64_t attack = 1ULL << to;
-                // LÌmites del tablero
-                if (((1ULL << square) & Board::left) || ((1ULL << square) & Board::bottom)) {
-                    break;
-                }
-                if (!(attack & occupied)) {
-                    attacks |= attack;
-                }
-                else {
-                    if (attack & opposition) {
-                        attacks |= attack;
-                    }
-                    break;
-                }
-            }
+        if (!(bishops & (1ULL << square)))
+            continue;
 
-            //Diagonal superior izquierda
-            for (int to = square + 7; to < 64; to += 7) {
-                uint64_t attack = 1ULL << to;
-                // LÌmites del tablero
-                if (((1ULL << square) & Board::left) || ((1ULL << square) & Board::top)) {
-                    break;
-                }
-                if (!(attack & occupied)) {
-                    attacks |= attack;
-                }
-                else {
-                    if (attack & opposition) {
-                        attacks |= attack;
-                    }
-                    break;
-                }
-            }
+        int rank = square / 8;
+        int file = square % 8;
 
-            // Diagonal inferior derecha
-            for (int to = square - 7; to >= 0; to -= 7) {
-                uint64_t attack = 1ULL << to;
-                // LÌmites del tablero
-                if (((1ULL << square) & Board::right) || ((1ULL << square) & Board::bottom)) {
-                    break;
-                }
-                if (!(attack & occupied)) {
-                    attacks |= attack;
-                }
-                else {
-                    if (attack & opposition) {
-                        attacks |= attack;
-                    }
-                    break;
-                }
-            }
+        // arriba-derecha (+9)
+        for (int r = rank + 1, f = file + 1; r < 8 && f < 8; r++, f++) {
+            int to = r * 8 + f;
+            uint64_t mask = 1ULL << to;
+            attacks |= mask;
+            if (mask & occupied) break;
+        }
+
+        // abajo-izquierda (-9)
+        for (int r = rank - 1, f = file - 1; r >= 0 && f >= 0; r--, f--) {
+            int to = r * 8 + f;
+            uint64_t mask = 1ULL << to;
+            attacks |= mask;
+            if (mask & occupied) break;
+        }
+
+        // arriba-izquierda (+7)
+        for (int r = rank + 1, f = file - 1; r < 8 && f >= 0; r++, f--) {
+            int to = r * 8 + f;
+            uint64_t mask = 1ULL << to;
+            attacks |= mask;
+            if (mask & occupied) break;
+        }
+
+        // abajo-derecha (-7)
+        for (int r = rank - 1, f = file + 1; r >= 0 && f < 8; r--, f++) {
+            int to = r * 8 + f;
+            uint64_t mask = 1ULL << to;
+            attacks |= mask;
+            if (mask & occupied) break;
         }
     }
+
     return attacks;
 }
 
@@ -635,12 +721,12 @@ uint64_t Board::generateKnightAttacks(uint64_t knights, uint64_t opposition, uin
     for (int square = 0; square < 64; square++) {
         if (knights & (1ULL << square)) {
             // 2 casillas a la izquierda + 1 hacia arriba (mueve hacia la izquierda)
-            if (square % 8 > 1) {  // Verificar si est· en el borde izquierdo
+            if (square % 8 > 1) {  // Verificar si est√° en el borde izquierdo
                 if (square > 15) attacks |= (1ULL << (square - 17)); // Arriba izquierda
                 if (square < 48) attacks |= (1ULL << (square + 15)); // Abajo izquierda
             }
             // 2 casillas a la derecha + 1 hacia arriba
-            if (square % 8 < 6) {  // Verificar si est· en el borde derecho
+            if (square % 8 < 6) {  // Verificar si est√° en el borde derecho
                 if (square > 15) attacks |= (1ULL << (square - 15)); // Arriba derecha
                 if (square < 48) attacks |= (1ULL << (square + 17)); // Abajo derecha
             }
@@ -661,11 +747,13 @@ uint64_t Board::generateKnightAttacks(uint64_t knights, uint64_t opposition, uin
 
 uint64_t Board::generateTowerAttacks(uint64_t towers, uint64_t opposition, uint64_t occupied) {
     uint64_t attacks = 0ULL;
+
     for (int square = 0; square < 64; square++) {
+
         if ((1ULL << square) & towers) {
             int fromRank = square / 8;
             // Hacia la derecha
-            if (!((1ULL << square) & Board::right)) { // LÌmite derecho del tablero
+            if (!((1ULL << square) & Board::right)) { // L√≠mite derecho del tablero
                 for (int to = (square + 1); ((to / 8) == fromRank) && (to < 64); to++) {
                     uint64_t attack = 1ULL << to;
 
@@ -682,7 +770,7 @@ uint64_t Board::generateTowerAttacks(uint64_t towers, uint64_t opposition, uint6
             }
 
             // Hacia la izquierda
-            if (!((1ULL << square) & Board::left)) { // LÌmite izquierdo del tablero
+            if (!((1ULL << square) & Board::left)) { // L√≠mite izquierdo del tablero
                 for (int to = (square - 1); ((to / 8) == fromRank) && (to >= 0); to--) {
                     uint64_t attack = 1ULL << to;
                     if (!(attack & occupied)) {
@@ -862,7 +950,7 @@ bool Board::isKingInCheck(const Board& board, int kingColor) {
 
     int oppColor = (kingColor == WHITE) ? BLACK : WHITE;
 
-    // Buscamos la posiciÛn del rey
+    // Buscamos la posici√≥n del rey
     int kingPosition = -1;
     for (int i = 0; i < 64; i++) {
         if (kingBitboard & (1ULL << i)) {
@@ -903,31 +991,55 @@ bool Board::isLegal(const Board& board, Move m, int color) {
     Move lastMove = board.getLastMove();
 	int lastMovePieceIndex = board.getBoardIndexFromMoveGenerator(lastMove.piece);
 
-    // Verificar si la casilla de destino est· ocupada por una pieza del mismo color
+    // Verificar si la casilla de destino est√° ocupada por una pieza del mismo color
     if (toMask & position) {
         return false;
     }
 
-    // Comprobar si el camino est· despejado seg˙n el tipo de movimiento
-    if ((pieceIndex == Board::W_TOWER || pieceIndex == Board::B_TOWER || pieceIndex == Board::W_QUEEN || pieceIndex == Board::B_QUEEN)
-        && Board::isSameRank(m.from, m.to)
-        && !(Board::isHorizontalPathClear(m, occupied))) {
+    // Comprobar si el camino est√° despejado seg√∫n el tipo de movimiento
+    if ((pieceIndex == Board::W_TOWER || pieceIndex == Board::B_TOWER)) {
+        if (isSameRank(m.from, m.to)) {
+            if (!isHorizontalPathClear(m, occupied))
+                return false;
+        }
+        else if (isSameColumn(m.from, m.to)) {
+            if (!isVerticalPathClear(m, occupied))
+                return false;
+        }
+        else {
+            return false; 
+        }
+    }
+    else if (pieceIndex == Board::W_QUEEN || pieceIndex == Board::B_QUEEN) {
+        if (isSameRank(m.from, m.to)) {
+            if (!isHorizontalPathClear(m, occupied))
+                return false;
+        }
+        else if (isSameColumn(m.from, m.to)) {
+            if (!isVerticalPathClear(m, occupied))
+                return false;
+        }
+        else if (isSameDiagonal(m.from, m.to)) {
+            if (!isDiagonalPathClear(m, occupied))
+                return false;
+        }
+        else {
+            return false; 
+        }
+    }
+    else if ((pieceIndex == Board::W_BISHOP || pieceIndex == Board::B_BISHOP)) {
+        if (isSameDiagonal(m.from, m.to)) {
+            if (!isDiagonalPathClear(m, occupied))
+                return false;
+        }
+        else {
+            return false; 
+        }
+    }
+    else if ((pieceIndex == Board::W_KNIGHT || pieceIndex == Board::B_KNIGHT) && !(Board::isKnigthMove(m.from, m.to))) { // Comprobaci√≥n para los caballos
         return false;
     }
-    else if ((pieceIndex == Board::W_TOWER || pieceIndex == Board::B_TOWER || pieceIndex == Board::W_QUEEN || pieceIndex == Board::B_QUEEN)
-        && Board::isSameColumn(m.from, m.to)
-        && !(Board::isVerticalPathClear(m, occupied))) {
-        return false;
-    }
-    else if ((pieceIndex == Board::W_BISHOP || pieceIndex == Board::B_BISHOP || pieceIndex == Board::W_QUEEN || pieceIndex == Board::B_QUEEN)
-        && Board::isSameDiagonal(m.from, m.to)
-        && !(Board::isDiagonalPathClear(m, occupied))) {
-        return false;
-    }
-    else if ((pieceIndex == Board::W_KNIGHT || pieceIndex == Board::B_KNIGHT) && !(Board::isKnigthMove(m.from, m.to))) { // ComprobaciÛn para los caballos
-        return false;
-    }
-    else if (pieceIndex == Board:: W_PAWN || pieceIndex == Board::W_PAWN) {
+    else if (pieceIndex == Board:: W_PAWN || pieceIndex == Board::B_PAWN) {
         int direction = (color == Board::WHITE) ? 8 : -8; // Blancas suben, negras bajan
         // int startRow = (board.isWhiteToMove()) ? 8 : 48;  // Filas iniciales para peones
         int startRow = m.from / 8;
@@ -953,8 +1065,8 @@ bool Board::isLegal(const Board& board, Move m, int color) {
                 goto CHECK_KING;
             }
             // En passant
-            else if ((lastMovePieceIndex == Board::W_PAWN || lastMovePieceIndex == Board::W_PAWN) 
-                && abs(lastMove.from - lastMove.to) == 16) { // Anterior movimiento es de peÛn, de dos casillas
+            else if ((lastMovePieceIndex == Board::W_PAWN || lastMovePieceIndex == Board::B_PAWN) 
+                && abs(lastMove.from - lastMove.to) == 16) { // Anterior movimiento es de pe√≥n, de dos casillas
                 int passantSquare = lastMove.to; // Casilla donde se encuentra la pieza contraria
                 int passantLandingSqu = lastMove.to + direction; // Casilla a donde debiera de moverse la pieza atacante para capturar en passant
                 if (m.to == passantLandingSqu && (abs(passantSquare - m.from) == 1)) { // Casilla adyacente

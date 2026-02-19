@@ -80,7 +80,8 @@ public:
           uint64_t b_pawn, uint64_t b_bishop, uint64_t b_knight, uint64_t b_tower, uint64_t b_king, uint64_t b_queen);
 
     void printBitboard(uint64_t bitboard);
-    bool makeMove(Move move);              
+    bool makeMove(Move move); 
+    bool makeMoveV2(Move move);
     void unmakeMove();                     
     void print();
 
