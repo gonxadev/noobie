@@ -128,6 +128,7 @@
     <ClInclude Include="Board.h" />
     <ClInclude Include="Evaluator.h" />
     <ClInclude Include="MoveGenerator.h" />
+    <ClInclude Include="perft.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
