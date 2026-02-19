@@ -1,15 +1,12 @@
 #include <iostream>
 #include "./Board.h"
+#include "./perft.h"
 
 int main(int argc, char** argv) {
 
     Board board(true);
-    board.printBitboard(board.getOccupiedBitBoard());
-	board.makeMove({ 12, 28, Board::W_PAWN, 0 }); // e2-e4
-    board.printBitboard(board.getOccupiedBitBoard());
-    // TODO: Inicializa aquí tu motor/servicio. Ejemplo:
-    // MotorAjedrez motor;
-    // motor.Iniciar();
-
+    int depth = 5;
+    uint64_t nodes = benchmark::perft(board, depth);
+	std::cout << "Total nodes at depth " << depth << ": " << nodes << std::endl;
     return 0;
 }
