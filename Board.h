@@ -98,6 +98,7 @@ public:
     bool getRightWhiteCastle() const;
     bool isWhiteToMove() const;  // Gets a boolean that indicates if white is making the next move
     void setWhiteToMove(bool value);
+	void updateStalemateCheckmateStatus();
 
     int getMoves();
 
@@ -128,7 +129,7 @@ public:
     static bool isKingInCheck(const Board& board, int kingColor);
     static bool isLegal(const Board& board, Move move, int color);
 
-    void generateLegalMoves(const Board& board, std::vector<Move>& moves, int color);
+    std::vector<Move> generateLegalMoves(int color);
 
     /*
     * @brief

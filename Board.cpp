@@ -106,6 +106,18 @@ void Board::setWhiteToMove(bool value) {
     whiteToMove = value;
 }
 
+void Board::updateStalemateCheckmateStatus() {
+    int color = whiteToMove ? WHITE : BLACK;
+    std::vector<Move> legalMoves = generateLegalMoves(color);
+    if (legalMoves.empty()) {
+        if (isKingInCheck(*this, color)) {
+            checkmate = true;
+        } else {
+            stalemate = true;
+        }
+    }
+}
+
 int Board::getMoves() {
     return moves;
 }
@@ -274,6 +286,9 @@ bool Board::makeMove(Move move) {
         moves++;
         whiteToMove = !whiteToMove;
         lastMove = move;
+
+		//updateStalemateCheckmateStatus();
+
         return true;
     }
     return false;
@@ -1121,14 +1136,21 @@ CHECK_KING:
     return !isKingInCheck(auxBoard, color);
 }
 
-void Board::generateLegalMoves(const Board& board, std::vector<Move>& moves, int color) {
+std::vector<Move> Board::generateLegalMoves(int color) {
+	std::vector<Move> moves = this->moveGen->generateMoves(*this, color);
+    /*
     for (int i = 0; i < moves.size(); i++) {
         Move move = moves.at(i);
-        if (!isLegal(board, move, color)) {
+        if (!isLegal(*this, move, color)) {
             moves.erase(moves.begin() + i);
             i--;
         }
     }
+    */
+    moves.erase(std::remove_if(moves.begin(), moves.end(),
+        [&](const Move& m) { return !isLegal(*this, m, color); }),
+        moves.end());
+    return moves;
 }
 
 Board Board::clone() const {
