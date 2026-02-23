@@ -1,6 +1,24 @@
 ﻿#include "Board.h"
 #include "MoveGenerator.h"
 
+Board::Board() {
+    //White pieces
+    pieces[W_PAWN] = 255ULL << 8;
+    pieces[W_BISHOP] = 36ULL;
+    pieces[W_KNIGHT] = 66ULL;
+    pieces[W_TOWER] = 129ULL;
+    pieces[W_KING] = 16ULL;
+    pieces[W_QUEEN] = 8ULL;
+
+    //Black pieces
+    pieces[B_PAWN] = 255ULL << 48;
+    pieces[B_BISHOP] = 36ULL << 56;
+    pieces[B_KNIGHT] = 66ULL << 56;
+    pieces[B_TOWER] = 129ULL << 56;
+    pieces[B_KING] = 16ULL << 56;
+    pieces[B_QUEEN] = 8ULL << 56;
+}
+
 Board::Board(bool init) {
     if (init) {
         //White pieces
