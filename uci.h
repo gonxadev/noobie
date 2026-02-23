@@ -16,4 +16,5 @@ private:
     void uciOk();
     void isReady();
     void go(std::istringstream& iss);
+	void quit();
 };

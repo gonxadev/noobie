@@ -22,6 +22,8 @@ void uci::handleCommand(std::string line) {
         isReady();
     else if (token == "go")
         go(iss);
+    else if (token == "quit")
+        quit();
 }
 
 void uci::uciOk() {
@@ -49,4 +51,8 @@ void uci::go(std::istringstream& iss) {
     // Por ejemplo:
     // Move bestMove = searchBestMove(depth);
 	// std::cout << "bestmove " << bestMove.toString() << "\n";
+}
+
+void uci::quit() {
+    isRunning = false;
 }
