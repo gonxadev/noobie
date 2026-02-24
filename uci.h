@@ -11,10 +11,10 @@ public:
     std::atomic<bool> isRunning{ true };
     void loop();
 private:
-	Board board;
+    Board board;
     void handleCommand(std::string line);
     void uciOk();
     void isReady();
     void go(std::istringstream& iss);
-	void quit();
+    void quit();
 };
