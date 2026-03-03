@@ -2,6 +2,14 @@
 #include <intrin.h>
 #include "MoveGenerator.h"
 
+struct SearchResult {
+    public:
+        Move bestMove;
+		uint64_t nodesSearched;
+		uint64_t timeTaken; // in milliseconds
+		uint64_t score;
+};
+
 class Evaluator
 {
 private: 
@@ -18,7 +26,7 @@ private:
 
 public:
     static int evaluate(Board& board);
-	static int negamax(Board& board, int depth, int alpha, int beta);
+	static SearchResult negamax(Board& board, int depth, int alpha, int beta);
     static Move getBestMove();
     static void setBestMove(Move move);
 };

@@ -4,37 +4,37 @@ MoveGenerator moveGen;
 
 Move Evaluator::bestMove;
 
-int Evaluator::negamax(Board& board, int depth, int alpha, int beta) {
+SearchResult Evaluator::negamax(Board& board, int depth, int alpha, int beta) {
     if (depth == 0 || board.isStalemate() /* o board.isCheckmate() si lo tienes */) {
-        return evaluate(board);
+        return SearchResult{ Move{}, (uint64_t)evaluate(board)};
     }
 
-    int mejorValor = -100000; // Simula -infinito
+    SearchResult result;
+    result.score = -100000; // Simula -infinito
+
     std::vector<Move> movimientos = moveGen.generateMoves(board, (board.isWhiteToMove() ? Board::WHITE : Board::BLACK));;
 
     for (const Move& movimiento : movimientos) {
-
         board.makeMove(movimiento);
-
-        int valor = -negamax(board, depth - 1, -beta, -alpha);
-
+        SearchResult hijo = negamax(board, depth - 1, -beta, -alpha);
+        int valor = -hijo.score;
         board.unmakeMove();
 
-        if (valor > mejorValor) {
-            Evaluator::setBestMove(movimiento);
-            mejorValor = valor;
+        if (valor > result.score) {
+            result.score = valor;
+            result.bestMove = movimiento;
         }
 
-        if (mejorValor > alpha) {
-            alpha = mejorValor;
+        if (result.score > alpha) {
+            alpha = result.score;
         }
 
         if (alpha >= beta) {
-            break; // poda be
+            break; // poda beta
         }
     }
 
-    return mejorValor;
+    return result;
 }
 
 int Evaluator::evaluate(Board& board) {
