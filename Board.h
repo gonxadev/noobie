@@ -15,6 +15,17 @@ struct Move {
     bool operator==(const Move& other) const {
         return from == other.from && to == other.to && promotion == other.promotion;
     }
+    std::string toString() const {
+		return indexToSquare(from) + indexToSquare(to);    
+	} 
+    std::string indexToSquare(int index) const {
+        int file = index % 8;
+        int rank = index / 8;
+        std::string result;
+        result += static_cast<char>('a' + file);
+        result += static_cast<char>('1' + rank);
+        return result;
+    }
 };
 
 struct BoardState {
