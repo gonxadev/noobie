@@ -7,9 +7,9 @@ struct SearchResult {
         Move bestMove;
 		uint64_t nodesSearched;
 		uint64_t timeTaken; // in milliseconds
-		uint64_t score;
+		int score;
 
-        // constructor con nombres explícitos
+        // constructor con nombres explcitos
         SearchResult(Move bestMove, int score) {
             this->bestMove = bestMove;
 			this->score = score;
@@ -30,7 +30,7 @@ struct SearchResult {
 class Evaluator
 {
 private: 
-    // Constante para evaluar una posición
+    // Constante para evaluar una posicin
     static const int PAWN_VALUE = 100;
     static const int KNIGHT_VALUE = 320;
     static const int BISHOP_VALUE = 330;
@@ -42,7 +42,7 @@ private:
     static Move bestMove;
 
 public:
-    static uint64_t evaluate(Board& board);
+    static int evaluate(Board& board);
 	static SearchResult negamax(Board& board, int depth, int alpha, int beta);
     static Move getBestMove();
     static void setBestMove(Move move);

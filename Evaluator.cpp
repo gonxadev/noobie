@@ -5,14 +5,15 @@ MoveGenerator moveGen;
 Move Evaluator::bestMove;
 
 SearchResult Evaluator::negamax(Board& board, int depth, int alpha, int beta) {
-    if (depth == 0 || board.isStalemate() /* o board.isCheckmate() si lo tienes */) {
-        return SearchResult(Move{}, evaluate(board));
+    if (depth == 0 || board.isStalemate()) {
+        int eval = evaluate(board);
+        return SearchResult(Move{}, (board.isWhiteToMove() ? eval : -eval));
     }
 
     SearchResult result;
-    result.score = -100000; // Simula -infinito
+    result.score = -100000; 
 
-    std::vector<Move> movimientos = moveGen.generateMoves(board, (board.isWhiteToMove() ? Board::WHITE : Board::BLACK));;
+    std::vector<Move> movimientos = moveGen.generateMoves(board, (board.isWhiteToMove() ? Board::WHITE : Board::BLACK));
 
     for (const Move& movimiento : movimientos) {
         board.makeMove(movimiento);
@@ -30,34 +31,34 @@ SearchResult Evaluator::negamax(Board& board, int depth, int alpha, int beta) {
         }
 
         if (alpha >= beta) {
-            break; // poda beta
+            break; 
         }
     }
 
     return result;
 }
 
-uint64_t Evaluator::evaluate(Board& board) {
-    uint64_t score = 0;
+int Evaluator::evaluate(Board& board) {
+    int score = 0;
 
     // Sumar piezas blancas
-    score += __popcnt64(board.getBitboardFromType(Board::W_PAWN)) * PAWN_VALUE;
-    score += __popcnt64(board.getBitboardFromType(Board::W_KNIGHT)) * KNIGHT_VALUE;
-    score += __popcnt64(board.getBitboardFromType(Board::W_BISHOP)) * BISHOP_VALUE;
-    score += __popcnt64(board.getBitboardFromType(Board::W_TOWER)) * ROOK_VALUE;
-    score += __popcnt64(board.getBitboardFromType(Board::W_QUEEN)) * QUEEN_VALUE;
+    score += (int)__popcnt64(board.getBitboardFromType(Board::W_PAWN)) * PAWN_VALUE;
+    score += (int)__popcnt64(board.getBitboardFromType(Board::W_KNIGHT)) * KNIGHT_VALUE;
+    score += (int)__popcnt64(board.getBitboardFromType(Board::W_BISHOP)) * BISHOP_VALUE;
+    score += (int)__popcnt64(board.getBitboardFromType(Board::W_TOWER)) * ROOK_VALUE;
+    score += (int)__popcnt64(board.getBitboardFromType(Board::W_QUEEN)) * QUEEN_VALUE;
 
     // Restar piezas negras 
-    score -= __popcnt64(board.getBitboardFromType(Board::B_PAWN)) * PAWN_VALUE;
-    score -= __popcnt64(board.getBitboardFromType(Board::B_KNIGHT)) * KNIGHT_VALUE;
-    score -= __popcnt64(board.getBitboardFromType(Board::B_BISHOP)) * BISHOP_VALUE;
-    score -= __popcnt64(board.getBitboardFromType(Board::B_TOWER)) * ROOK_VALUE;
-    score -= __popcnt64(board.getBitboardFromType(Board::B_QUEEN)) * QUEEN_VALUE;
+    score -= (int)__popcnt64(board.getBitboardFromType(Board::B_PAWN)) * PAWN_VALUE;
+    score -= (int)__popcnt64(board.getBitboardFromType(Board::B_KNIGHT)) * KNIGHT_VALUE;
+    score -= (int)__popcnt64(board.getBitboardFromType(Board::B_BISHOP)) * BISHOP_VALUE;
+    score -= (int)__popcnt64(board.getBitboardFromType(Board::B_TOWER)) * ROOK_VALUE;
+    score -= (int)__popcnt64(board.getBitboardFromType(Board::B_QUEEN)) * QUEEN_VALUE;
 
     // Control del centro
     const uint64_t center = 0x0000001818000000ULL; // d4, e4, d5, e5
-    score += __popcnt64(board.getWhiteBitBoard() & center) * 20;
-    score -= __popcnt64(board.getBlackBitBoard() & center) * 20;
+    score += (int)__popcnt64(board.getWhiteBitBoard() & center) * 20;
+    score -= (int)__popcnt64(board.getBlackBitBoard() & center) * 20;
 
     return score;
 }
