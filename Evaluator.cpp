@@ -16,22 +16,23 @@ SearchResult Evaluator::negamax(Board& board, int depth, int alpha, int beta) {
     std::vector<Move> movimientos = moveGen.generateMoves(board, (board.isWhiteToMove() ? Board::WHITE : Board::BLACK));
 
     for (const Move& movimiento : movimientos) {
-        board.makeMove(movimiento);
-        SearchResult hijo = negamax(board, depth - 1, -beta, -alpha);
-        int valor = -hijo.score;
-        board.unmakeMove();
+        if (board.makeMoveV2(movimiento)) {
+            SearchResult hijo = negamax(board, depth - 1, -beta, -alpha);
+            int valor = -hijo.score;
+            board.unmakeMove();
 
-        if (valor > result.score) {
-            result.score = valor;
-            result.bestMove = movimiento;
-        }
+            if (valor > result.score) {
+                result.score = valor;
+                result.bestMove = movimiento;
+            }
 
-        if (result.score > alpha) {
-            alpha = result.score;
-        }
+            if (result.score > alpha) {
+                alpha = result.score;
+            }
 
-        if (alpha >= beta) {
-            break; 
+            if (alpha >= beta) {
+                break;
+            }
         }
     }
 
