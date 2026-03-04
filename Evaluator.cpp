@@ -12,11 +12,12 @@ SearchResult Evaluator::negamax(Board& board, int depth, int alpha, int beta) {
 
     SearchResult result;
     result.score = -100000; 
+	int colorToMove = (board.isWhiteToMove() ? Board::WHITE : Board::BLACK);
 
-    std::vector<Move> movimientos = moveGen.generateMoves(board, (board.isWhiteToMove() ? Board::WHITE : Board::BLACK));
+    std::vector<Move> movimientos = moveGen.generateMoves(board, colorToMove);
 
     for (const Move& movimiento : movimientos) {
-        if (board.makeMoveV2(movimiento)) {
+        if (Board::isLegal(board, movimiento, colorToMove) && board.makeMove(movimiento)) {
             SearchResult hijo = negamax(board, depth - 1, -beta, -alpha);
             int valor = -hijo.score;
             board.unmakeMove();

@@ -191,129 +191,6 @@ void Board::setStalemate(bool value) {
 }
 
 bool Board::makeMove(Move move) {
-    if (!stalemate && !checkmate) {
-        BoardState currentState;
-        for (int i = 0; i < 12; i++) currentState.pieces[i] = pieces[i];
-        currentState.whiteToMove = whiteToMove;
-        currentState.whiteCastleLeft = whiteCastleLeft;
-        currentState.whiteCastleRight = whiteCastleRight;
-        currentState.blackCastleLeft = blackCastleLeft;
-        currentState.blackCastleRight = blackCastleRight;
-        currentState.lastMove = lastMove;
-        currentState.stalemate = stalemate;
-        currentState.moves = moves;
-
-        history.push(currentState);
-
-        int pieceIndex = getBoardIndexFromMoveGenerator(move.piece);
-        int lastMovePieceIndex = getBoardIndexFromMoveGenerator(lastMove.piece);
-        int promotionIndex = getBoardIndexFromMoveGenerator(move.promotion);
-
-        uint64_t from_mask = 1ULL << move.from;
-        uint64_t delete_mask = ~from_mask;
-        uint64_t to_mask = 1ULL << move.to;
-        uint64_t occupied = getOccupiedBitBoard();
-        uint64_t oppPosition = whiteToMove ? getBlackBitBoard() : getWhiteBitBoard();
-
-        // Mover la pieza en su posición correspondiente
-        pieces[pieceIndex] |= to_mask;
-        pieces[pieceIndex] &= ~from_mask;
-
-        // Borrar la pieza que haya sido capturada
-        int size = sizeof(pieces) / sizeof(pieces[0]);
-        for (int i = 0; i < size; i++) {
-            if (i != pieceIndex) {
-                pieces[i] &= ~to_mask;
-            }
-        }
-
-        // En passant
-        int direction = whiteToMove ? 8 : -8;
-        if ((pieceIndex == W_PAWN || pieceIndex == B_PAWN) && 
-            (move.to == (move.from + direction + 1) || move.to == (move.from + direction - 1))) {
-            if ((lastMovePieceIndex == W_PAWN || lastMovePieceIndex == B_PAWN) && abs(lastMove.from - lastMove.to) == 16) {
-
-                int passantSquare = lastMove.to;                        // Casilla donde se encuentra la pieza contraria
-                int passantLandingSqu = lastMove.to + direction;        // Casilla a donde se mueve la pieza atacante
-                uint64_t passantLndSquMask = 1ULL << passantLandingSqu; // Máscara de la casilla de llegada
-                uint64_t passantSquMask = 1ULL << passantSquare;
-
-                if ((abs(passantSquare - move.from) == 1) && // Casilla es adyacente
-                    (occupied & passantSquMask) &&           // Casilla adyacente ocupada por enemigo
-                    !(occupied & passantLndSquMask)) {       // Casilla de llegada libre   
-                    for (int i = 0; i < size; i++) {
-                        pieces[i] &= ~passantSquMask;
-                    }
-                }
-            }
-        }
-
-        // Castling
-        if (pieceIndex == W_KING) {
-            if (move.from == 4 && move.to == 6 && whiteCastleRight) {
-                uint64_t from_tower_mask = 1ULL << 7;
-                uint64_t to_tower_mask = 1ULL << 5;
-                pieces[W_TOWER] |= to_tower_mask;
-                pieces[W_TOWER] &= ~from_tower_mask;
-            }
-            else if (move.from == 4 && move.to == 2 && whiteCastleLeft) {
-                uint64_t from_tower_mask = 1ULL << 0;
-                uint64_t to_tower_mask = 1ULL << 3;
-                pieces[W_TOWER] |= to_tower_mask;
-                pieces[W_TOWER] &= ~from_tower_mask;
-            }
-            whiteCastleLeft = whiteCastleRight = false;
-        }
-        else if (pieceIndex == B_KING) {
-            if (move.from == 60 && move.to == 62 && blackCastleRight) {
-                uint64_t from_tower_mask = 1ULL << 63;
-                uint64_t to_tower_mask = 1ULL << 61;
-                pieces[B_TOWER] |= to_tower_mask;
-                pieces[B_TOWER] &= ~from_tower_mask;
-            }
-            else if (move.from == 60 && move.to == 57 && blackCastleLeft) {
-                uint64_t from_tower_mask = 1ULL << 56;
-                uint64_t to_tower_mask = 1ULL << 59;
-                pieces[B_TOWER] |= to_tower_mask;
-                pieces[B_TOWER] &= ~from_tower_mask;
-            }
-            blackCastleLeft = blackCastleRight = false;
-        }
-        else if (pieceIndex == W_TOWER && move.from == 0) {
-            whiteCastleLeft = false;
-        }
-        else if (pieceIndex == W_TOWER && move.from == 7) {
-            whiteCastleRight = false;
-        }
-        else if (pieceIndex == B_TOWER && move.from == 56) {
-            blackCastleLeft = false;
-        }
-        else if (pieceIndex == B_TOWER && move.from == 63) {
-            blackCastleRight = false;
-        }
-
-        // Check for a promotion
-        if ((pieceIndex == W_PAWN && move.to >= 56) || (pieceIndex == B_PAWN && move.to < 8)) {
-			if (promotionIndex != -1) { // There's a promotion
-                pieces[promotionIndex] |= to_mask;
-                pieces[pieceIndex] &= ~to_mask;
-            }
-        }
-
-		// Update move count, turn and last move
-        moves++;
-        whiteToMove = !whiteToMove;
-        lastMove = move;
-
-		//updateStalemateCheckmateStatus();
-
-        return true;
-    }
-    return false;
-}
-
-bool Board::makeMoveV2(Move move) {
-    if (Board::isLegal(this, move, this->isWhiteToMove() ? Board::WHITE : Board::BLACK)) {
         BoardState currentState;
         for (int i = 0; i < 12; i++) currentState.pieces[i] = pieces[i];
         currentState.whiteToMove = whiteToMove;
@@ -427,8 +304,6 @@ bool Board::makeMoveV2(Move move) {
         whiteToMove = !whiteToMove;
         lastMove = move;
         return true;
-    }
-    return false;
 }
 
 void Board::unmakeMove() {
