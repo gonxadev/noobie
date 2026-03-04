@@ -83,7 +83,7 @@ void uci::search(int maxDepth, int timeForMove, int maxNodes, bool infinite) {
         if (searchAborted) break;
 
         // aquí iría tu alpha-beta/negamax
-        SearchResult result = Evaluator::negamax(board, depth, 100000, -100000);
+        SearchResult result = Evaluator::negamax(board, depth, -100000, 100000);
 
         if (searchAborted) break; // resultado parcial, no es fiable
 
