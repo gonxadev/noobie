@@ -8,6 +8,23 @@ struct SearchResult {
 		uint64_t nodesSearched;
 		uint64_t timeTaken; // in milliseconds
 		uint64_t score;
+
+        // constructor con nombres explícitos
+        SearchResult(Move bestMove, int score) {
+            this->bestMove = bestMove;
+			this->score = score;
+			this->nodesSearched = 0;    
+			this->timeTaken = 0;
+        }
+
+        // constructor por defecto
+        SearchResult(){
+			this->bestMove = Move{};
+			this->score = -100000;
+			this->nodesSearched = 0;    
+			this->timeTaken = 0;
+
+        }
 };
 
 class Evaluator
@@ -25,7 +42,7 @@ private:
     static Move bestMove;
 
 public:
-    static int evaluate(Board& board);
+    static uint64_t evaluate(Board& board);
 	static SearchResult negamax(Board& board, int depth, int alpha, int beta);
     static Move getBestMove();
     static void setBestMove(Move move);

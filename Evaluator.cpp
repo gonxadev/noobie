@@ -6,7 +6,7 @@ Move Evaluator::bestMove;
 
 SearchResult Evaluator::negamax(Board& board, int depth, int alpha, int beta) {
     if (depth == 0 || board.isStalemate() /* o board.isCheckmate() si lo tienes */) {
-        return SearchResult{ Move{}, (uint64_t)evaluate(board)};
+        return SearchResult(Move{}, evaluate(board));
     }
 
     SearchResult result;
@@ -37,8 +37,8 @@ SearchResult Evaluator::negamax(Board& board, int depth, int alpha, int beta) {
     return result;
 }
 
-int Evaluator::evaluate(Board& board) {
-    int score = 0;
+uint64_t Evaluator::evaluate(Board& board) {
+    uint64_t score = 0;
 
     // Sumar piezas blancas
     score += __popcnt64(board.getBitboardFromType(Board::W_PAWN)) * PAWN_VALUE;
@@ -56,8 +56,8 @@ int Evaluator::evaluate(Board& board) {
 
     // Control del centro
     const uint64_t center = 0x0000001818000000ULL; // d4, e4, d5, e5
-    //score += __popcnt64(board.getWhiteBitBoard() & center) * 20;
-    //score -= __popcnt64(board.getBlackBitBoard() & center) * 20;
+    score += __popcnt64(board.getWhiteBitBoard() & center) * 20;
+    score -= __popcnt64(board.getBlackBitBoard() & center) * 20;
 
     return score;
 }
