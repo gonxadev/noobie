@@ -1046,6 +1046,10 @@ std::vector<Move> Board::generateLegalMoves(int color) {
     return moves;
 }
 
+int Board::getMoveCount() const {
+    return moves;
+}
+
 Board Board::clone() const {
     Board copy(false);
     for (int i = 0; i < 12; i++) {
