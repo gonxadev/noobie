@@ -211,5 +211,7 @@ public:
 
     void setStalemate(bool value);
 
+	int getMoveCount() const;
+
     Board clone() const;
 };
