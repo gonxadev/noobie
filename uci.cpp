@@ -54,9 +54,10 @@ void uci::go(std::istringstream& iss) {
         else if (token == "movestogo") iss >> movestogo;
         else if (token == "nodes")     iss >> nodes;
         else if (token == "infinite")  infinite = true;
-        else if (token == "perft")
+        else if (token == "perft") {
             iss >> depth;
-		    benchmark::perftDivide(Board(true), depth);
+            benchmark::perftDivide(Board(true), depth);
+        }
     }
     // calcular tiempo disponible para este movimiento
     int timeForMove; //= calculateTime(wtime, btime, winc, binc, movestogo, movetime, infinite);
